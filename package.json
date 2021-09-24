@@ -1,0 +1,16 @@
+{
+  "name": "smart_light_mqttlistener",
+  "version": "1.0.0",
+  "description": "Service which listens for MQTT messages from the smart light control system.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sean Corcoran",
+  "license": "ISC",
+  "dependencies": {
+    "mongoose": "^6.0.7",
+    "mqtt": "^4.2.8",
+    "config": "^3.3.6"
+  }
+}
