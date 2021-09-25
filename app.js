@@ -1,3 +1,7 @@
+// Created by Sean Corcoran
+// Light Controller MQTT Listener.
+// For SIT314 - Final Project - Deakin University - 2021
+
 // Include the MQTT package.
 const mqtt = require('mqtt');
 const mongoose = require('mongoose');
@@ -13,32 +17,13 @@ const client = mqtt.connect("mqtt://broker.hivemq.com:1883");
 const connectString = `mongodb+srv://${config.get('db.user')}:${config.get('db.password')}@sit314.ljihj.mongodb.net/sit314?retryWrites=true&w=majority`;
 
 // Set to the type of messages to listen for.
-let flitered = false;
-let topics = '';
+let topic = "/scorlights/#";
 
-// Set the topic paths.
-// All messages.
-var allMessages = "/scorlights/#";
-
-// Flitered.
-var shortrangeSpeeds = "/seanc/shortrange/speed/";
-var allBattery = "/seanc/+/battery/";
-var longrangeLatLong = "/seanc/longrange/latLong/";
-
-// If not filtering subscribe to all messages else, only subscribe to the flitered ones.
-if (!flitered) {
-    // All messages.
-    topics = [allMessages];
-}
-else {
-    // Flitered.
-    topics = [shortrangeSpeeds, allBattery, longrangeLatLong];
-}
-
-// Connect to the MQTT service and subscribe to listen to the required topic. 
+// Connect to the MQTT service and subscribe to listen to the required topic, also connect to the database/
 client.on('connect', () => {
-    client.subscribe(topics);
-    console.log('mqtt connected');
+    client.subscribe(topic);
+    console.log('MQTT Connected');
+    
     // Connect to the MongoDB.
     mongoose.connect(connectString, { useNewUrlParser: true, useUnifiedTopology: true })
         .then(() => console.log('Connected to db'))
@@ -48,21 +33,24 @@ client.on('connect', () => {
         });
 });
 
-// Display messages.
+// Display messages and perform action if a switch message.
 client.on('message', (topic, message) => {
     console.log(`${topic} : ${message}`);
 
+    // Split up the topic.
     let splitTopic = topic.split("/");
     
+    // If this is a switch topic. actions will need to performed.
     if (splitTopic[2] == "switch")
     {
         // call the db function and look and send on the MQTT message to the target device to toggle it.
         lookupTargetAndSend(splitTopic[3], message);
     }
-
 });
 
 async function lookupTargetAndSend(device_id, message) {
+    
+    // Look up control device from the DB.
     const device = await Devices
         .find({ device_id: device_id })
         .catch((err) => {
@@ -72,6 +60,23 @@ async function lookupTargetAndSend(device_id, message) {
 
     console.log(`MQTT target for device ID: ${device_id} is: ${device[0].target}`);
 
+    // If toggle message.
+    if (message == "toggle")
+    {
+        toggle(device, message);
+    }
+
+    // If change state message.
+    if (message == "on" || message == "off")
+    {
+        // Set the encoding And change from a buffer into a string.
+        const buf = Buffer.from(message, 'utf-8')
+        changeState(device, buf.toString());
+    }
+}
+
+async function toggle(device, message)
+{
     // Split up the target string.
     let splitTarget = device[0].target.split("/");
         console.log(splitTarget.length);
@@ -120,9 +125,64 @@ async function lookupTargetAndSend(device_id, message) {
     }
 
     // Close the db connection.
-    //mongoose.connection.close();    
+    //mongoose.connection.close(); 
 }
 
+async function changeState(device, message)
+{
+    // Split up the target string.
+    let splitTarget = device[0].target.split("/");
+        console.log(splitTarget.length);
+    if (splitTarget.length == 2) {
+        // Target All
+        console.log(message);
+        axios
+            .post(`${config.get('API_Address')}/lightsV2/changestate/all/`, {
+                stateChange: message
+            })
+            .then(res => {
+                //console.log(res);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+
+    if (splitTarget.length == 3) {
+        // Target Apartment
+        axios
+            .post(`${config.get('API_Address')}/lightsV2/apartment/${splitTarget[1]}/changestate/`,{
+                stateChange: message
+            })
+            .then(res => {
+                //console.log(res);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+
+    if (splitTarget.length == 4) {
+        // Target Room
+        axios
+            .post(`${config.get('API_Address')}/lightsV2/room/${splitTarget[2]}/changestate/`, {
+                apartment_id: `${splitTarget[1]}`,
+                stateChange: message
+            })
+            .then(res => {
+                //console.log(res);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+
+    if (splitTarget.length == 5) {
+        // Target One Light
+        mqttPublish(`/scorlights${device[0].target}`, message);
+        // Could replace the above with just the api call
+    }
+}
 // Could also be extended to get the current state field on the devices within the db and update them, 
 // i.e lights in room x turned off, set all lights in that room to off 
 
