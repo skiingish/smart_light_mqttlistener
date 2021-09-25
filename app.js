@@ -1,6 +1,7 @@
 // Include the MQTT package.
 const mqtt = require('mqtt');
 const mongoose = require('mongoose');
+const axios = require('axios');
 const config = require('config');
 const Devices = require('./models/devices');
 const mqttPublish = require('./mqttPublish');
@@ -61,18 +62,62 @@ client.on('message', (topic, message) => {
 
 });
 
-async function lookupTargetAndSend(device_id, message)
-{
-    
-        const device = await Devices
-        .find({device_id: device_id})
+async function lookupTargetAndSend(device_id, message) {
+    const device = await Devices
+        .find({ device_id: device_id })
         .catch((err) => {
             console.log(err);
             return success;
         });
-    
-        console.log(`MQTT target for device ID: ${device_id} is: ${device[0].target}`);
-        mqttPublish(`/scorlights${device[0].target}`,message);
+
+    console.log(`MQTT target for device ID: ${device_id} is: ${device[0].target}`);
+
+    // Split up the target string.
+    let splitTarget = device[0].target.split("/");
+        console.log(splitTarget.length);
+    if (splitTarget.length == 2) {
+        // Target All
+        axios
+            .post(`${config.get('API_Address')}/lightsV2/toggle/all/`)
+            .then(res => {
+                //console.log(res);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+
+    if (splitTarget.length == 3) {
+        // Target Apartment
+        axios
+            .post(`${config.get('API_Address')}/lightsV2/apartment/${splitTarget[1]}/toggle`)
+            .then(res => {
+                //console.log(res);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+
+    if (splitTarget.length == 4) {
+        // Target Room
+        axios
+            .post(`${config.get('API_Address')}/lightsV2/room/${splitTarget[2]}/toggle/`, {
+                apartment_id: `${splitTarget[1]}`
+            })
+            .then(res => {
+                //console.log(res);
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+
+    if (splitTarget.length == 5) {
+        // Target One Light
+        mqttPublish(`/scorlights${device[0].target}`, message);
+        // Could replace the above with just the api call
+    }
 
     // Close the db connection.
     //mongoose.connection.close();    

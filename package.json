@@ -9,8 +9,9 @@
   "author": "Sean Corcoran",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.21.4",
+    "config": "^3.3.6",
     "mongoose": "^6.0.7",
-    "mqtt": "^4.2.8",
-    "config": "^3.3.6"
+    "mqtt": "^4.2.8"
   }
 }
