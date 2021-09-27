@@ -41,7 +41,7 @@ client.on('connect', () => {
 
 // Display MQTT messages and perform action message is coming from a control device.
 client.on('message', (topic, message) => {
-    //console.log(`${topic} : ${message}`);
+    console.log(`${topic} : ${message}`);
 
     // Fire off data to the traffic logger at the MQTT field.
     trafficLogger(1, 1);
@@ -52,7 +52,10 @@ client.on('message', (topic, message) => {
     // If this is a switch topic. actions will need to performed.
     if (splitTopic[2] == "switch") {
         // Call the db function and look and send on the MQTT message to the target device(s).
-        lookupControlDeviceTarget(splitTopic[3], message);
+        lookupControlDeviceTarget(splitTopic[3], message)
+        .catch( (err) => {
+            console.log(err);
+        });
     }
 });
 
@@ -63,9 +66,15 @@ async function lookupControlDeviceTarget(device_id, message) {
         .find({ device_id: device_id })
         .catch((err) => {
             console.log(err);
-            return success;
-        });
-
+            //return success;
+        })
+    // If no device found.
+    if (device.length == 0)
+    {
+        console.log(`Device Not In Database: ${device_id}`);
+        return;
+    }    
+    
     //console.log(`MQTT target for device ID: ${device_id} is: ${device[0].target}`);
 
     // If the toggle message.
@@ -77,7 +86,10 @@ async function lookupControlDeviceTarget(device_id, message) {
     if (message == "on" || message == "off") {
         // Set the encoding and change from a buffer into a string. (Used to cause a error)
         const buf = Buffer.from(message, 'utf-8')
-        changeState(device, buf.toString());
+        changeState(device, buf.toString())
+        .catch( (err) => {
+            //console.log(err);
+        });
     }
 }
 
