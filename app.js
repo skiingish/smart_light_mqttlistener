@@ -13,13 +13,13 @@ const Devices = require('./models/devices');
 const mqttPublish = require('./mqttPublish');
 const trafficLogger = require('./trafficLogger');
 
-console.log(config.get('API_Address'));
+const API_Address = "http://54.211.202.253:8000";
 
 // Create a MQTT client connected to the hivemq service. 
 const client = mqtt.connect("mqtt://broker.hivemq.com:1883");
 
 // MongoDB - add the username, password, to connection string.
-const connectString = `mongodb+srv://${config.get('db.user')}:${config.get('db.password')}@sit314.ljihj.mongodb.net/sit314?retryWrites=true&w=majority`;
+const connectString = `mongodb+srv://smartLightListenerProd:PMQrxlb1w8s8JmgC@sit314.ljihj.mongodb.net/sit314?retryWrites=true&w=majority`;
 
 // Set to the type of messages to listen for. (listen to all topics)
 let topic = "/scorlights/#";
@@ -104,7 +104,7 @@ async function toggle(device, message) {
     // Target All
     if (splitTarget.length == 2) {
         axios
-            .post(`${config.get('API_Address')}/lightsV2/toggle/all/`)
+            .post(`${API_Address}/lightsV2/toggle/all/`)
             .then(res => {
                 //console.log(res);
             })
@@ -116,7 +116,7 @@ async function toggle(device, message) {
     // Targeting a apartment
     if (splitTarget.length == 3) {
         axios
-            .post(`${config.get('API_Address')}/lightsV2/apartment/${splitTarget[1]}/toggle`)
+            .post(`${API_Address}/lightsV2/apartment/${splitTarget[1]}/toggle`)
             .then(res => {
                 //console.log(res);
             })
@@ -128,7 +128,7 @@ async function toggle(device, message) {
     // Targeting a room.
     if (splitTarget.length == 4) {
         axios
-            .post(`${config.get('API_Address')}/lightsV2/room/${splitTarget[2]}/toggle/`, {
+            .post(`${API_Address}/lightsV2/room/${splitTarget[2]}/toggle/`, {
                 apartment_id: `${splitTarget[1]}`
             })
             .then(res => {
@@ -158,7 +158,7 @@ async function changeState(device, message) {
 
         console.log(message);
         axios
-            .post(`${config.get('API_Address')}/lightsV2/changestate/all/`, {
+            .post(`${API_Address}/lightsV2/changestate/all/`, {
                 stateChange: message
             })
             .then(res => {
@@ -172,7 +172,7 @@ async function changeState(device, message) {
     if (splitTarget.length == 3) {
 
         axios
-            .post(`${config.get('API_Address')}/lightsV2/apartment/${splitTarget[1]}/changestate/`, {
+            .post(`${API_Address}/lightsV2/apartment/${splitTarget[1]}/changestate/`, {
                 stateChange: message
             })
             .then(res => {
@@ -187,7 +187,7 @@ async function changeState(device, message) {
     if (splitTarget.length == 4) {
 
         axios
-            .post(`${config.get('API_Address')}/lightsV2/room/${splitTarget[2]}/changestate/`, {
+            .post(`${API_Address}/lightsV2/room/${splitTarget[2]}/changestate/`, {
                 apartment_id: `${splitTarget[1]}`,
                 stateChange: message
             })
