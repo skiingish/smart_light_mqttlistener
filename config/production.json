@@ -5,5 +5,5 @@
         "user": "smartLightListenerProd",
         "password": "PMQrxlb1w8s8JmgC"
     },
-    "API_Address": "http://localhost:8000"
+    "API_Address": "http://54.211.202.253:8000/"
 }
