@@ -13,6 +13,8 @@ const Devices = require('./models/devices');
 const mqttPublish = require('./mqttPublish');
 const trafficLogger = require('./trafficLogger');
 
+console.log(config.get('API_Address'));
+
 // Create a MQTT client connected to the hivemq service. 
 const client = mqtt.connect("mqtt://broker.hivemq.com:1883");
 
