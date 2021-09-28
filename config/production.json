@@ -1,7 +1,9 @@
 {
-    "name": "smart_light_controller",
+    "name": "Smart Light Listener",
+    "port": 8000,
     "db": {
-        "user": "",
-        "password": ""
-    }
+        "user": "smartLightListenerProd",
+        "password": "PMQrxlb1w8s8JmgC"
+    },
+    "API_Address": "http://localhost:8000"
 }
