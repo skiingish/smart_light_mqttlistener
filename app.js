@@ -43,7 +43,7 @@ client.on('connect', () => {
 
 // Display MQTT messages and perform action message is coming from a control device.
 client.on('message', (topic, message) => {
-    console.log(`${topic} : ${message}`);
+    //console.log(`${topic} : ${message}`);
 
     // Fire off data to the traffic logger at the MQTT field.
     trafficLogger(1, 1);
@@ -55,6 +55,15 @@ client.on('message', (topic, message) => {
     if (splitTopic[2] == "switch") {
         // Call the db function and look and send on the MQTT message to the target device(s).
         lookupControlDeviceTarget(splitTopic[3], message)
+        .catch( (err) => {
+            console.log(err);
+        });
+    }
+
+    // If this is a state report topic. (A light is reporting it's state update). 
+    if (splitTopic[2] == "statereport") {
+        // Update the light state status for this device in the DB. (used to help show the current state on a web interface)
+        updateLightStateOnDB(splitTopic[3], message)
         .catch( (err) => {
             console.log(err);
         });
@@ -206,6 +215,21 @@ async function changeState(device, message) {
     }
 }
 
-// Could also be extended to get the current state field on the devices within the db and update them, 
-// i.e lights in room x turned off, set all lights in that room to off 
+// Update a lights state (on or off) on the backend database.
+async function updateLightStateOnDB(device_id, message) {
+    const buf = Buffer.from(message, 'utf-8')
+
+    axios
+        .patch(`${API_Address}/updatedevice/updatestate/${device_id}`, {
+            current_state: buf.toString()
+        })
+        .then(res => {
+            //console.log(res);
+            //console.log(buf.toString());
+        })
+        .catch(err => {
+            console.log(err);
+        });
+
+}
 
