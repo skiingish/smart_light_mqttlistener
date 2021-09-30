@@ -13,7 +13,7 @@ const Devices = require('./models/devices');
 const mqttPublish = require('./mqttPublish');
 const trafficLogger = require('./trafficLogger');
 
-const API_Address = "http://54.211.202.253:8000";
+const API_Address = "http://smartlights-api-backend-lb-1879228982.us-east-1.elb.amazonaws.com:8000";
 
 // Create a MQTT client connected to the hivemq service. 
 const client = mqtt.connect("mqtt://broker.hivemq.com:1883");
