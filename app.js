@@ -15,6 +15,9 @@ const trafficLogger = require('./trafficLogger');
 
 const API_Address = "http://smartlights-api-backend-lb-1879228982.us-east-1.elb.amazonaws.com:8000";
 
+// new Date object
+let date = new Date();
+
 // Create a MQTT client connected to the hivemq service. 
 const client = mqtt.connect("mqtt://broker.hivemq.com:1883");
 
@@ -27,7 +30,7 @@ let topic = "/scorlights/#";
 // Connect to the MQTT service and subscribe to listen to the required topic, also connect to the database/
 client.on('connect', () => {
     client.subscribe(topic);
-    console.log('MQTT Connected');
+    console.log(`${date.toLocaleString()} - MQTT Connected`);
 
     // Connect to the MongoDB.
     mongoose.connect(connectString, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -43,7 +46,7 @@ client.on('connect', () => {
 
 // Display MQTT messages and perform action message is coming from a control device.
 client.on('message', (topic, message) => {
-    //console.log(`${topic} : ${message}`);
+    console.log(`${date.toLocaleString()} - ${topic} : ${message}`);
 
     // Fire off data to the traffic logger at the MQTT field.
     trafficLogger(1, 1);
