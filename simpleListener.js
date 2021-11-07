@@ -3,9 +3,6 @@
 // Include the packages.
 const mqtt = require('mqtt');
 
-// new Date object
-let date = new Date();
-
 // Create a MQTT client connected to the hivemq service. 
 const client = mqtt.connect("mqtt://broker.hivemq.com:1883");
 
@@ -15,10 +12,14 @@ let topic = "/scorlights/#";
 // Connect to the MQTT service and subscribe to listen to the required topic, also connect to the database/
 client.on('connect', () => {
     client.subscribe(topic);
+    // new Date object
+    let date = new Date();
     console.log(`${date.toLocaleString()} - MQTT Connected`);
 });
 
 // Display MQTT messages.
 client.on('message', (topic, message) => {
+    // new Date object
+    let date = new Date();
     console.log(`${date.toLocaleString()} - ${topic} : ${message}`);
 });
